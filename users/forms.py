@@ -15,6 +15,10 @@ class UserRegistrationForm(forms.ModelForm):
         super(UserRegistrationForm, self).__init__(*args, **kwargs)
 
 
+class UserSMSVerificationForm(forms.Form):
+    verification_code = forms.CharField(max_length=6, required=True, label="Verification Code")
+
+
 class UserVerificationForm(forms.Form):
     verification_code = forms.CharField(
         label='Verification Code',

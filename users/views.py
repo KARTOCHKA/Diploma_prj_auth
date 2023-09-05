@@ -1,11 +1,10 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .forms import UserRegistrationForm, UserVerificationForm
+from .forms import UserRegistrationForm, UserSMSVerificationForm
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.shortcuts import render, redirect
-from django.urls import reverse, reverse_lazy
 from twilio.rest import Client
 from django.conf import settings
 import random
@@ -39,7 +38,6 @@ class UserRegistration(APIView):
 
         if form.is_valid():
             user = form.save()
-            user.save()
 
             request.session['phone'] = request.data['phone']
 
@@ -55,7 +53,7 @@ class UserRegistration(APIView):
             # Send the verification code via SMS
             send_verification_sms(request.data['phone'], verification_code)
 
-            return redirect(reverse('user-verification'))
+            return redirect('user-verification')
 
         response_data = {'message': 'User registration failed'}
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +81,7 @@ class Verification(APIView):
         phone_number = request.session.get('phone', '')
 
         # Render the verification form with the phone number
-        form = UserVerificationForm(phone=phone_number)
+        form = UserSMSVerificationForm()
         return render(request, 'users/verification.html', {'form': form})
 
     @swagger_auto_schema(
@@ -99,15 +97,14 @@ class Verification(APIView):
         # Get the phone number from the session
         phone_number = request.session.get('phone', '')
 
-        form = UserVerificationForm(request.POST, phone=phone_number)
+        form = UserSMSVerificationForm(request.POST)
 
         if form.is_valid():
-            phone_number = form.cleaned_data['phone']
             verification_code = form.cleaned_data['verification_code']
 
             try:
                 user_verification = UserVerification.objects.get(
-                    phone_number=phone_number,
+                    phone=phone_number,
                     verification_code=verification_code,
                     attempts_remaining__gt=0,
                     verified=False,
@@ -120,7 +117,7 @@ class Verification(APIView):
                 user_verification.save()
 
                 # Redirect to the home page upon successful verification
-                return redirect(reverse('user-success'))
+                return redirect('user-success')
             except UserVerification.DoesNotExist:
                 form.add_error('verification_code', 'Invalid verification code')
 
@@ -138,13 +135,10 @@ class HomePage(APIView):
     def get(self, request):
         print("HomePage view is executed")
         # Fetch all verified users
-        verified_users = UserVerification.objects.filter(verified=True).select_related('user')
+        verified_users = User.objects.filter(verified=True)
+        return render(request, 'users/success.html', {'verified_users': verified_users})
 
-        # Serialize the user data using your UserVerificationSerializer
-        serializer = UserVerificationSerializer(verified_users, many=True)
 
-        # Pass the verified_users context variable to the 'success.html' template
-        return render(request, 'users/success.html', {'verified_users': serializer.data})
 
     @swagger_auto_schema(
         request_body=CreateUserSerializer,

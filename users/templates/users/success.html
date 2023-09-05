@@ -17,11 +17,11 @@
             </tr>
         </thead>
         <tbody>
-            {% for user_verification in verified_users %}
+            {% for user in verified_users %}
             <tr>
-                <td>{{ user_verification.user.id }}</td>
-                <td>{{ user_verification.user.name }}</td>
-                <td>{{ user_verification.phone_number }}</td>
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.phone }}</td>
             </tr>
             {% empty %}
             <tr>
