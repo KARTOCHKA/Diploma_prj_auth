@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verification</title>
+</head>
+<body>
+    <h1>Verification</h1>
+    <p>Please enter the verification code sent to:</p>
+    <p><strong>{{ form.phone_number.value }}</strong></p>
+    <form method="post" action="{% url 'user-verification' %}">
+        {% csrf_token %}
+        <label for="verification_code">Verification Code:</label>
+        <input type="text" name="verification_code" required><br><br>
+        <input type="submit" value="Verify">
+    </form>
+</body>
+</html>
+
