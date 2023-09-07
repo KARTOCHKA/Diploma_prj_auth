@@ -133,12 +133,9 @@ class HomePage(APIView):
         operation_description="Get a list of all verified users."
     )
     def get(self, request):
-        print("HomePage view is executed")
         # Fetch all verified users
         verified_users = User.objects.filter(verified=True)
         return render(request, 'users/success.html', {'verified_users': verified_users})
-
-
 
     @swagger_auto_schema(
         request_body=CreateUserSerializer,
