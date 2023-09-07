@@ -14,6 +14,7 @@
                 <th>User ID</th>
                 <th>Name</th>
                 <th>Phone Number</th>
+                <th>Date of Registration</th>
             </tr>
         </thead>
         <tbody>
@@ -22,6 +23,7 @@
                 <td>{{ user.id }}</td>
                 <td>{{ user.name }}</td>
                 <td>{{ user.phone }}</td>
+                <td>{{ user.date_joined }}</td>
             </tr>
             {% empty %}
             <tr>

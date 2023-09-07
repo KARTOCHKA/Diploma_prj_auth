@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 
 
@@ -7,6 +9,7 @@ class User(models.Model):
     password = models.CharField(max_length=100)
     phone = models.CharField(max_length=100)
     verified = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
         return self.name

@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .forms import UserRegistrationForm, UserSMSVerificationForm
+from .permissions import IsVerifiedUser
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.shortcuts import render, redirect
@@ -125,6 +126,7 @@ class Verification(APIView):
 
 
 class HomePage(APIView):
+    permission_classes = [IsVerifiedUser]
     @swagger_auto_schema(
         responses={
             200: HomePageResponseSerializer(),
@@ -134,7 +136,7 @@ class HomePage(APIView):
     )
     def get(self, request):
         # Fetch all verified users
-        verified_users = User.objects.filter(verified=True)
+        verified_users = User.objects.filter(verified=True).order_by('-id')
         return render(request, 'users/success.html', {'verified_users': verified_users})
 
     @swagger_auto_schema(
