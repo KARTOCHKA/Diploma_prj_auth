@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from django.db import models
 
 
@@ -21,6 +20,13 @@ class UserVerification(models.Model):
     verification_code = models.CharField(max_length=6)
     attempts_remaining = models.PositiveIntegerField(default=3)
     verified = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=datetime.now)
+    date_when_verified = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.user.name
+
+    def save_data_joint(self):
+        if self.verified and not self.date_when_verified:
+            self.date_when_verified = datetime.now()
+

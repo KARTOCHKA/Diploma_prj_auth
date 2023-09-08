@@ -13,11 +13,30 @@ import string
 
 
 def generate_verification_code(length=6):
+    """
+    Generate a random code of the specified length.
+
+    Parameters:
+        length (int): The length of the code to be generated. Defaults to 6.
+
+    Returns:
+        str: The generated random code.
+    """
     # Generate a random code of the specified length
     return ''.join(random.choices(string.digits, k=length))
 
 
 def send_verification_sms(phone_number, verification_code):
+    """
+    Sends a verification SMS to the specified phone number.
+
+    Parameters:
+        phone_number (str): The phone number to send the SMS to.
+        verification_code (str): The verification code to include in the SMS.
+
+    Returns:
+        None
+    """
     client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
     message = client.messages.create(
@@ -31,10 +50,22 @@ class UserRegistration(APIView):
     @swagger_auto_schema(
         request_body=UserSerializer,
         responses={200: UserResponseSerializer()},
-        operation_summary="Summary of your API endpoint",
-        operation_description="Description of your API endpoint",
+        operation_summary="User registration POST parameters",
+        operation_description="User registration POST parameters",
     )
     def post(self, request):
+        """
+        Perform user registration.
+
+        Parameters:
+            request (Request): The HTTP request object.
+
+        Returns:
+            Response: The HTTP response object with the result of the registration.
+
+        Raises:
+            None.
+        """
         form = UserRegistrationForm(request.data)
 
         if form.is_valid():
@@ -61,7 +92,8 @@ class UserRegistration(APIView):
 
     @swagger_auto_schema(
         query_serializer=UserSerializer(),
-        operation_summary="Summary of GET parameters"  # Use UserSerializer for query parameters
+        operation_summary="User registration",
+        operation_description="Description of what user GET"
     )
     def get(self, request):
         # Render the registration form
@@ -74,7 +106,7 @@ class Verification(APIView):
         responses={
             200: VerificationFormResponseSerializer(),  # Use your form response serializer
         },
-        operation_summary="Show Verification Form",
+        operation_summary="User SMS Verification",
         operation_description="Display the verification form to verify a user."
     )
     def get(self, request):
@@ -95,6 +127,19 @@ class Verification(APIView):
         operation_description="Verify a user by providing the phone number and verification code."
     )
     def post(self, request):
+        """
+        Perform user verification by providing the phone number and verification code.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A redirect to the home page if the verification is successful.
+            A rendered HTML page with the verification form if the verification fails.
+
+        Raises:
+            None.
+        """
         # Get the phone number from the session
         phone_number = request.session.get('phone', '')
 
@@ -115,6 +160,7 @@ class Verification(APIView):
                 user_verification.user.verified = True
                 user_verification.user.save()
                 user_verification.verified = True
+                user_verification.save_data_joint()
                 user_verification.save()
 
                 # Redirect to the home page upon successful verification
@@ -127,6 +173,7 @@ class Verification(APIView):
 
 class HomePage(APIView):
     permission_classes = [IsVerifiedUser]
+
     @swagger_auto_schema(
         responses={
             200: HomePageResponseSerializer(),
@@ -135,6 +182,15 @@ class HomePage(APIView):
         operation_description="Get a list of all verified users."
     )
     def get(self, request):
+        """
+        Get a list of all verified users.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The rendered success HTML page with the verified users.
+        """
         # Fetch all verified users
         verified_users = User.objects.filter(verified=True).order_by('-id')
         return render(request, 'users/success.html', {'verified_users': verified_users})
@@ -148,4 +204,13 @@ class HomePage(APIView):
         operation_description="Create a new user with the provided data."
     )
     def post(self, request):
+        """
+        Create a new user with the provided data.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The rendered registration HTML page.
+        """
         return render(request, 'users/registration.html')
