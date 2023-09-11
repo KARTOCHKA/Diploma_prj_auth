@@ -38,8 +38,9 @@ TWILIO_ACCOUNT_SID=
 YOUR_TWILIO_AUTH_TOKEN=
 YOUR_TWILIO_PHONE_NUMBER=
 ```
-_Для получения TWILIO_ACCOUNT_SID, YOUR_TWILIO_AUTH_TOKEN и YOUR_TWILIO_PHONE_NUMBER необходимо зарегистрироваться и подтвердить свой номер на сайте Twilio (https://www.twilio.com/en-us). 
-Далее необходимо приобрести любой номер на ваш выбор, он и будет YOUR_TWILIO_PHONE_NUMBER 
+Для получения TWILIO_ACCOUNT_SID, YOUR_TWILIO_AUTH_TOKEN и YOUR_TWILIO_PHONE_NUMBER необходимо зарегистрироваться и подтвердить свой номер на сайте Twilio (https://www.twilio.com/en-us). 
+Далее необходимо приобрести любой номер на ваш выбор, он и будет YOUR_TWILIO_PHONE_NUMBER.
+
 _Для запуска проекта необходимо клонировать репозиторий и создать и активировать виртуальное окружение:_ 
 ```
 python3 -m venv venv
