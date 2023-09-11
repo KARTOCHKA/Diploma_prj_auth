@@ -1,5 +1,6 @@
-##Russian
-##English
+#Порядок языков (language order):
+*Russian
+*English
 # Cервис для верификации пользователя путем отправки СМС кода
 ## Описание
 * Интерфейс системы содержит следующие экраны: регистрацию пользователя по имени, паролю и номеру телефона, верификация по смс коду, домашняя страница со списком всех зарегистрированных пользователей.
@@ -9,7 +10,7 @@
 ## Технологии
 * Python
 * Django
-* DRF
+* DRF (Django Rest Framework)
 * PostgreSQL
 * Twilio
 * nginx
@@ -31,7 +32,14 @@ POSTGRES_PASSWORD=
 
 #Secret_key:
 SECRET_KEY=
+
+# Twilio
+TWILIO_ACCOUNT_SID=
+YOUR_TWILIO_AUTH_TOKEN=
+YOUR_TWILIO_PHONE_NUMBER=
 ```
+_Для получения TWILIO_ACCOUNT_SID, YOUR_TWILIO_AUTH_TOKEN и YOUR_TWILIO_PHONE_NUMBER необходимо зарегистрироваться и подтвердить свой номер на сайте Twilio (https://www.twilio.com/en-us). 
+Далее необходимо приобрести любой номер на ваш выбор, он и будет YOUR_TWILIO_PHONE_NUMBER 
 _Для запуска проекта необходимо клонировать репозиторий и создать и активировать виртуальное окружение:_ 
 ```
 python3 -m venv venv
