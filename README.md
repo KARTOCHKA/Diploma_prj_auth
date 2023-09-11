@@ -94,7 +94,16 @@ POSTGRES_PASSWORD=
 
 #Secret_key:
 SECRET_KEY=
+
+# Twilio
+TWILIO_ACCOUNT_SID=
+YOUR_TWILIO_AUTH_TOKEN=
+YOUR_TWILIO_PHONE_NUMBER=
 ```
+
+To obtain the TWILIO_ACCOUNT_SID, YOUR_TWILIO_AUTH_TOKEN, and YOUR_TWILIO_PHONE_NUMBER, you need to register and verify your phone number on the Twilio website (https://www.twilio.com/en-us).
+Afterward, you should purchase any phone number of your choice, and that number will become YOUR_TWILIO_PHONE_NUMBER
+
 _To run the project, clone the repository and create/activate a virtual environment:_
 ```
 python3 -m venv venv
