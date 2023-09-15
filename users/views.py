@@ -1,8 +1,10 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from .forms import UserRegistrationForm, UserSMSVerificationForm, UserProfileForm, UserVerificationForm
+from .forms import UserRegistrationForm, UserSMSVerificationForm, UserProfileForm, EnterInviteCodeForm
 from .permissions import IsVerifiedUser
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
@@ -41,7 +43,7 @@ def get_users_with_invite_code(request):
     user = request.user
 
     # Get users who entered the current user's invite code
-    users_with_invite = User.objects.filter(invite_code=user.invite_code).exclude(id=user.id)
+    users_with_invite = User.objects.filter(activated_invite_code=user.invite_code).exclude(id=user.id)
 
     # Serialize the users who entered the invite code
     users_with_invite_serializer = UserSerializer(users_with_invite, many=True)
@@ -52,29 +54,36 @@ def get_users_with_invite_code(request):
 @api_view(['POST'])
 @permission_classes([IsVerifiedUser])
 def enter_invite_code(request):
-    user = request.user
-    invite_code = request.data.get('invite_code')
+    user_id = request.session.get('user_id')
+    user = User.objects.get(id=user_id)
+    enter_invite_code_form = EnterInviteCodeForm(request.POST)
+    if enter_invite_code_form.is_valid():
+        invite_code = enter_invite_code_form.cleaned_data['invite_code']
 
-    if not invite_code:
-        return Response({'message': 'Invite code is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not invite_code:
+            return Response({'message': 'Invite code is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        target_user = User.objects.get(invite_code=invite_code)
-    except User.DoesNotExist:
-        return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            target_user = User.objects.get(invite_code=invite_code)
+        except User.DoesNotExist:
+            return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if target_user == user:
-        return Response({'message': 'You cannot enter your own invite code'}, status=status.HTTP_400_BAD_REQUEST)
+        if target_user == user:
+            return Response({'message': 'You cannot enter your own invite code'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if target_user.verified:
-        return Response({'message': 'User with this invite code is already verified'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        # Check if the invite code has already been used by another user
+        if User.objects.filter(activated_invite_code=invite_code).exclude(id=user.id).exists():
+            return Response({'message': 'Invite code has already been used'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-    # Assign the target user's invite code to the current user
-    user.invite_code = invite_code
-    user.save()
+        # Assign the invite code to the current user
+        user.activated_invite_code = invite_code
+        user.save()
 
-    return Response({'message': 'Invite code entered successfully'})
+        # Redirect to the user's profile page with updated data
+        return HttpResponseRedirect(reverse('user-profile'))
+
+    return Response(enter_invite_code_form.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def generate_verification_code(length=6):
@@ -143,7 +152,12 @@ class UserRegistration(APIView):
         if form.is_valid():
             user = form.save()
 
-            request.session['phone'] = request.data['phone']
+            # Store user data in session
+            request.session['user_id'] = user.id
+            request.session['name'] = user.name
+            request.session['phone'] = user.phone
+            request.session['invite_code'] = user.invite_code
+            request.session['verified'] = user.verified
 
             # Create a UserVerification record
             verification_code = generate_verification_code()
@@ -170,7 +184,7 @@ class UserRegistration(APIView):
     def get(self, request):
         # Render the registration form
         form = UserRegistrationForm()
-        print(form, request.user)
+
         return render(request, 'users/registration.html', {'form': form})
 
 
@@ -188,8 +202,6 @@ class Verification(APIView):
 
         # Render the verification form with the phone number
         form = UserSMSVerificationForm()
-        print(phone_number)
-        print(request.user)
         return render(request, 'users/verification.html', {'form': form})
 
     @swagger_auto_schema(
@@ -237,6 +249,7 @@ class Verification(APIView):
                 user_verification.verified = True
                 user_verification.save_data_joint()
                 user_verification.save()
+                request.session['user_id'] = user_verification.user.id
 
                 # Redirect to the home page upon successful verification
                 return redirect('user-success')
@@ -267,8 +280,7 @@ class HomePage(APIView):
             HttpResponse: The rendered success HTML page with the verified users.
         """
         # Fetch all verified users
-        verified_users = User.objects.filter(verified=True).order_by('-id')
-        print(request.user)
+        verified_users = User.objects.filter(verified=True).order_by('id')
         return render(request, 'users/success.html', {'verified_users': verified_users})
 
     @swagger_auto_schema(
@@ -296,23 +308,62 @@ class UserProfile(APIView):
     permission_classes = [IsVerifiedUser]
 
     def get(self, request):
-        user = request.user
-        print(user)
-        user_data = {
-            'name': user.name,
-            'phone': user.phone,
-            'invite_code': user.invite_code,
-            'verified': user.verified,
-        }
-        form = UserProfileForm(instance=user, initial=user_data)
-        return render(request, 'users/profile.html', {'form': form})
+        user_id = request.session.get('user_id')
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                user_data = {
+                    'name': request.session.get('name', user.name),
+                    'phone': request.session.get('phone', user.phone),
+                    'invite_code': request.session.get('invite_code', user.invite_code),
+                    'verified': request.session.get('verified', user.verified),
+                }
+                form = UserProfileForm(instance=user, initial=user_data)
+
+                enter_invite_code_form = EnterInviteCodeForm()
+
+                # Get users who have the current user's invite code in their activated_invite_code
+                users_with_activated_invite = User.objects.filter(activated_invite_code=user.invite_code).exclude(
+                    id=user.id)
+                return render(request, 'users/profile.html', {
+                    'form': form,
+                    'verified': user.verified,
+                    'activated_invite_code': user.activated_invite_code,
+                    'current_invite_code': user.invite_code,
+                    'enter_invite_code_form': enter_invite_code_form,
+                    'users_with_invite_code': users_with_activated_invite,
+                })
+            except User.DoesNotExist:
+                pass
+        # Handle case when user ID is not found in the session
+        return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request):
-        user = request.user
-        form = UserProfileForm(request.data, instance=user)
+        user_id = request.session.get('user_id')
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+                form = UserProfileForm(request.data, instance=user)
 
-        if form.is_valid():
-            form.save()
-            return Response({'message': 'User profile updated successfully'})
-        else:
-            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+                if form.is_valid():
+                    form.save()
+
+                    # Update session data
+                    request.session['name'] = user.name
+                    request.session['phone'] = user.phone
+                    request.session['invite_code'] = user.invite_code
+                    request.session['verified'] = user.verified
+
+                    # Redirect to the user's profile page with updated data
+                    return HttpResponseRedirect(reverse('user-profile'))
+
+                else:
+                    return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                pass
+
+        # Handle case when user ID is not found in the session
+        return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request):
+        return self.put(request)

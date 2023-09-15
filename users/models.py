@@ -12,13 +12,14 @@ class User(models.Model):
     verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=datetime.now)
     invite_code = models.CharField(max_length=6, null=True, blank=True)
+    activated_invite_code = models.CharField(max_length=6, null=True, blank=True)
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if not self.invite_code:
-            self.invite_code = ''.join(random.choices(string.ascii_letters, k=6))
+            self.invite_code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
         super().save(*args, **kwargs)
 
 

@@ -5,11 +5,26 @@
 </head>
 <body>
     <h1>Your Profile</h1>
-
+    <button onclick="window.location.href='{% url 'user-success' %}'">Home page</button><br><br>
+    <p>Your current invite code: {{ current_invite_code }}</p>
+    <p>Activated invite code: {{ activated_invite_code }}</p>
     <form method="POST" action="{% url 'user-profile' %}">
         {% csrf_token %}
         {{ form.as_p }}
+        <p>Verified: {{ verified }}</p>
         <button type="submit">Update Profile</button>
     </form>
+
+    <form method="POST" action="{% url 'enter-invite-code' %}">
+        {% csrf_token %}
+        {{ enter_invite_code_form.as_p }}
+        <button type="submit">Enter Invite Code</button>
+    </form>
+        <p>Users with your invite code:</p>
+    <ul>
+        {% for user in users_with_invite_code %}
+            <li>{{ user.name }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

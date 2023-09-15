@@ -22,7 +22,7 @@ class UserSMSVerificationForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        exclude = ['password']
+        exclude = ['password', 'activated_invite_code', 'invite_code', 'verified']
 
 
 class UserVerificationForm(forms.Form):
@@ -44,3 +44,7 @@ class UserVerificationForm(forms.Form):
                 widget=forms.TextInput(attrs={'placeholder': 'Enter your phone number'}),
                 required=True
             )
+
+
+class EnterInviteCodeForm(forms.Form):
+    invite_code = forms.CharField(max_length=6, required=False, label='Enter Invite Code')
