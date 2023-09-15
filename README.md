@@ -18,7 +18,23 @@
 ## Сущности
 * Пользователь
 * Верификация
-
+## Эндпоинты
+* Эндпоинт Регистрации Пользователя:
+URL: /api/register/
+Метод: POST
+Описание: Регистрирует нового пользователя с автоматически сгенерированным 6-значным инвайт-кодом. Если пользователь уже существует, он будет перенаправлен на домашнюю страницу.
+* Эндпоинт Профиля Пользователя:
+URL: /api/profile/
+Метод: GET
+Описание: Позволяет пользователям просматривать свой профиль и вводить инвайт-код другого пользователя. Этот эндпоинт также отображает инвайт-код, который пользователь уже активировал.
+* Эндпоинт Активации Инвайт-Кода:
+URL: /api/activate-invite/
+Метод: POST
+Описание: Позволяет пользователям активировать инвайт-код в своем профиле. Пользователи могут активировать только один инвайт-код, и если они уже активировали один, будет отображен ранее активированный код.
+* Эндпоинт Пользователей с Инвайт-Кодом:
+URL: /api/users-with-invite/
+Метод: GET
+Описание: Список пользователей (номеров телефонов), которые ввели инвайт-код текущего пользователя.
 
 ### Запуск приложения в локальной сети:
 _Для работы с переменными окружениями необходимо создать файл .env и заполнить его согласно файлу .env.sample:_
@@ -80,8 +96,23 @@ python3 manage.py runserver
 ## Entities
 * User
 * Verification
-
-
+## Endpoints
+* User Registration Endpoint:
+URL: /api/register/
+Method: POST
+Description: Registers a new user with a randomly generated 6-digit invite code. If the user already exists, they will be redirected to the home page.
+* User Profile Endpoint:
+URL: /api/profile/
+Method: GET
+Description: Allows users to view their profile and enter another user's invite code. This endpoint also displays the invite code that the user has already activated.
+* Activate Invite Code Endpoint:
+URL: /api/activate-invite/
+Method: POST
+Description: Allows users to activate an invite code in their profile. Users can activate only one invite code, and if they have already activated one, the previously activated code will be displayed.
+* Users with Invite Code Endpoint:
+URL: /api/users-with-invite/
+Method: GET
+Description: Lists users (phone numbers) who entered the invite code of the current user.
 ### Running the Application Locally:
 _To work with environment variables, you need to create a .env file and fill it out according to the .env.sample file:_
 ```

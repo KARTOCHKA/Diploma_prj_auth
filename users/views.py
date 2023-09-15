@@ -1,7 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .forms import UserRegistrationForm, UserSMSVerificationForm
+from rest_framework.decorators import api_view, permission_classes
+from .forms import UserRegistrationForm, UserSMSVerificationForm, UserProfileForm, UserVerificationForm
 from .permissions import IsVerifiedUser
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
@@ -10,6 +11,70 @@ from twilio.rest import Client
 from django.conf import settings
 import random
 import string
+
+
+@api_view(['GET'])
+@permission_classes([IsVerifiedUser])
+def get_user_profile(request):
+    user = request.user
+
+    # Get users who entered the current user's invite code
+    users_with_invite = User.objects.filter(invite_code=user.invite_code).exclude(id=user.id)
+
+    # Serialize the user's profile data
+    profile_serializer = UserProfileSerializer(user)
+
+    # Serialize the users who entered the invite code
+    users_with_invite_serializer = UserProfileSerializer(users_with_invite, many=True)
+
+    data = {
+        'profile': profile_serializer.data,
+        'users_with_invite': users_with_invite_serializer.data
+    }
+
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsVerifiedUser])
+def get_users_with_invite_code(request):
+    user = request.user
+
+    # Get users who entered the current user's invite code
+    users_with_invite = User.objects.filter(invite_code=user.invite_code).exclude(id=user.id)
+
+    # Serialize the users who entered the invite code
+    users_with_invite_serializer = UserSerializer(users_with_invite, many=True)
+
+    return Response(users_with_invite_serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsVerifiedUser])
+def enter_invite_code(request):
+    user = request.user
+    invite_code = request.data.get('invite_code')
+
+    if not invite_code:
+        return Response({'message': 'Invite code is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        target_user = User.objects.get(invite_code=invite_code)
+    except User.DoesNotExist:
+        return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if target_user == user:
+        return Response({'message': 'You cannot enter your own invite code'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if target_user.verified:
+        return Response({'message': 'User with this invite code is already verified'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    # Assign the target user's invite code to the current user
+    user.invite_code = invite_code
+    user.save()
+
+    return Response({'message': 'Invite code entered successfully'})
 
 
 def generate_verification_code(length=6):
@@ -66,6 +131,13 @@ class UserRegistration(APIView):
         Raises:
             None.
         """
+        name = request.data['name']
+        password = request.data['password']
+        existing_user = User.objects.filter(name=name, password=password).exists()
+
+        if existing_user:
+            return redirect('user-success')
+
         form = UserRegistrationForm(request.data)
 
         if form.is_valid():
@@ -98,6 +170,7 @@ class UserRegistration(APIView):
     def get(self, request):
         # Render the registration form
         form = UserRegistrationForm()
+        print(form, request.user)
         return render(request, 'users/registration.html', {'form': form})
 
 
@@ -115,6 +188,8 @@ class Verification(APIView):
 
         # Render the verification form with the phone number
         form = UserSMSVerificationForm()
+        print(phone_number)
+        print(request.user)
         return render(request, 'users/verification.html', {'form': form})
 
     @swagger_auto_schema(
@@ -193,6 +268,7 @@ class HomePage(APIView):
         """
         # Fetch all verified users
         verified_users = User.objects.filter(verified=True).order_by('-id')
+        print(request.user)
         return render(request, 'users/success.html', {'verified_users': verified_users})
 
     @swagger_auto_schema(
@@ -214,3 +290,29 @@ class HomePage(APIView):
             HttpResponse: The rendered registration HTML page.
         """
         return render(request, 'users/registration.html')
+
+
+class UserProfile(APIView):
+    permission_classes = [IsVerifiedUser]
+
+    def get(self, request):
+        user = request.user
+        print(user)
+        user_data = {
+            'name': user.name,
+            'phone': user.phone,
+            'invite_code': user.invite_code,
+            'verified': user.verified,
+        }
+        form = UserProfileForm(instance=user, initial=user_data)
+        return render(request, 'users/profile.html', {'form': form})
+
+    def put(self, request):
+        user = request.user
+        form = UserProfileForm(request.data, instance=user)
+
+        if form.is_valid():
+            form.save()
+            return Response({'message': 'User profile updated successfully'})
+        else:
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)

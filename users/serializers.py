@@ -8,6 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'password', 'phone', 'verified']
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'password', 'phone', 'verified', 'invite_code']
+
+
 class UserResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
 

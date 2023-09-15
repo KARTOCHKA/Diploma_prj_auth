@@ -57,7 +57,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
 ]
-
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Or 'django.contrib.sessions.backends.cache' for caching sessions
+SESSION_COOKIE_NAME = 'sessionid'
 ROOT_URLCONF = 'user_auth.urls'
 
 TEMPLATES = [
@@ -130,6 +134,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication',
+                                       'rest_framework.authentication.BasicAuthentication'],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 

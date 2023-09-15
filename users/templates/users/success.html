@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>Your phone has been verified!</h1>
+    <button onclick="window.location.href='{% url 'user-profile' %}'">Profile</button><br><br>
     <button onclick="window.location.href='{% url 'register_user' %}'">Register new user</button><br><br>
     <label> Here is a list of all verified users:</label>
 <table>

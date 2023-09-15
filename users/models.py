@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import datetime
 from django.db import models
 
@@ -9,9 +11,15 @@ class User(models.Model):
     phone = models.CharField(max_length=100)
     verified = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=datetime.now)
+    invite_code = models.CharField(max_length=6, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.invite_code:
+            self.invite_code = ''.join(random.choices(string.ascii_letters, k=6))
+        super().save(*args, **kwargs)
 
 
 class UserVerification(models.Model):
@@ -29,4 +37,3 @@ class UserVerification(models.Model):
     def save_data_joint(self):
         if self.verified and not self.date_when_verified:
             self.date_when_verified = datetime.now()
-

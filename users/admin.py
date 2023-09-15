@@ -4,7 +4,7 @@ from .models import User, UserVerification
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'password', 'phone', 'verified', 'date_joined')
+    list_display = ('id', 'name', 'password', 'phone', 'verified', 'date_joined', 'invite_code')
     search_fields = ('name', 'phone')
 
 

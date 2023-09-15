@@ -19,6 +19,12 @@ class UserSMSVerificationForm(forms.Form):
     verification_code = forms.CharField(max_length=6, required=True, label="Verification Code")
 
 
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        exclude = ['password']
+
+
 class UserVerificationForm(forms.Form):
     verification_code = forms.CharField(
         label='Verification Code',
