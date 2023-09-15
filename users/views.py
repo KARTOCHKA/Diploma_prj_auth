@@ -145,6 +145,12 @@ class UserRegistration(APIView):
         existing_user = User.objects.filter(name=name, password=password).exists()
 
         if existing_user:
+            user = User.objects.get(name=name, password=password)
+            request.session['user_id'] = user.id
+            request.session['name'] = user.name
+            request.session['phone'] = user.phone
+            request.session['invite_code'] = user.invite_code
+            request.session['verified'] = user.verified
             return redirect('user-success')
 
         form = UserRegistrationForm(request.data)

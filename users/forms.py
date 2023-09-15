@@ -22,7 +22,7 @@ class UserSMSVerificationForm(forms.Form):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        exclude = ['password', 'activated_invite_code', 'invite_code', 'verified']
+        exclude = ['password', 'activated_invite_code', 'invite_code', 'verified', 'date_joined']
 
 
 class UserVerificationForm(forms.Form):
