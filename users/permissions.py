@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from users.models import User
+
 
 class IsVerifiedUser(permissions.BasePermission):
     """
@@ -13,6 +15,8 @@ class IsVerifiedUser(permissions.BasePermission):
         bool: True if the user has permission, False otherwise.
     """
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
+        user_id = request.session.get('user_id')
+        user = User.objects.get(id=user_id)
+        if user.verified:
             return True
         return False
