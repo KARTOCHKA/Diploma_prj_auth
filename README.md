@@ -3,9 +3,9 @@
 * English
 # Cервис для верификации пользователя путем отправки СМС кода
 ## Описание
-* Интерфейс системы содержит следующие экраны: регистрацию пользователя по имени, паролю и номеру телефона, верификация по смс коду, домашняя страница со списком всех зарегистрированных пользователей.
+* Интерфейс системы содержит следующие экраны: регистрацию пользователя по имени, паролю и номеру телефона, верификация по смс коду, домашняя страница со списком всех зарегистрированных и верифицированных пользователей, страница пользователя где он может изменить имя и телефон, а так жн ввести инвайт код другого пользователя
 * При создании нового пользователя на указанный номер телефона высылается 6-ти значный смс код с помощью Twilio.
-* Права доступа к домашней страницы даются пользователю после подтверждения номера телефона.
+* Права доступа к домашней страницы и профилю даются пользователю после подтверждения номера телефона.
 * Использовано 2 модели, User, используемая для создания пользователя и UserVerification, которая отвечает за верификацию пользователя.
 ## Технологии
 * Python
@@ -81,7 +81,7 @@ python3 manage.py runserver
 
 # User Verification Service via SMS Code
 ## Description
-* The system's interface includes the following screens: user registration with name, password, and phone number, SMS code verification, and a home page with a list of all registered users.
+* The system interface contains the following screens: user registration by name, password and phone number, verification by SMS code, home page with a list of all registered and verified users, a user page where he can change his name and phone number, and also enter the invite code of another user
 * When creating a new user, a 6-digit SMS code is sent to the specified phone number using Twilio.
 * Access rights to the home page are granted to the user after phone number confirmation.
 * Two models are used: User, which is used for user creation, and UserVerification, which is responsible for user verification.
